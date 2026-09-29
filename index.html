@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تحدي الأصابع الاحترافي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #09090b;
+            --bg-card: rgba(24, 24, 27, 0.7);
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --success: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            touch-action: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1e1e24 0%, var(--bg-dark) 100%);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .logo-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            box-shadow: 0 10px 20px var(--primary-glow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .menu-toggle-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            cursor: pointer;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            z-index: 100;
+            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        .side-menu.open {
+            left: 0;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 90;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .menu-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .menu-header {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .menu-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-align: right;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .menu-item:active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .update-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 5px;
+        }
+
+        .instruction {
+            position: absolute;
+            top: 15%;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .finger-circle {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            border: 4px solid #fff;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: popIn 0.3s forwards, pulseRing 1s infinite alternate;
+        }
+
+        .finger-circle.winner {
+            border-color: var(--success) !important;
+            box-shadow: 0 0 50px var(--success), inset 0 0 20px var(--success);
+            transform: translate(-50%, -50%) scale(1.3);
+            animation: winnerPulse 0.5s infinite alternate;
+            z-index: 10;
+        }
+
+        .particle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: burst 0.9s ease-out forwards;
+            z-index: 150;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.4s;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .challenge-result {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #fff;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            border: 1px dashed rgba(255,255,255,0.2);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes popIn {
+            to { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes pulseRing {
+            from { box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+            to { box-shadow: 0 0 30px rgba(255,255,255,0.8); }
+        }
+
+        @keyframes winnerPulse {
+            from { transform: translate(-50%, -50%) scale(1.3); }
+            to { transform: translate(-50%, -50%) scale(1.4); }
+        }
+
+        @keyframes burst {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--dx), var(--dy)) scale(0.3);
+            }
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            margin-bottom: 10px;
+            font-family: 'Cairo';
+        }
+    </style>
+</head>
+<body>
+    <div id="home-screen" class="screen">
+        <div class="menu-toggle-btn" onclick="toggleMenu()">☰</div>
+
+        <div class="logo-container">
+            <h1 class="logo-title">تحدي الأصابع</h1>
+            <p style="color: var(--text-muted);">اجمع أصدقاءك، ضعوا أصابعكم، وانتظروا التحدي!</p>
+        </div>
+        <button class="btn" onclick="startGame()">ابدأ اللعب الآن</button>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+        <button class="back-btn" onclick="backToHome()">الرئيسية</button>
+        <div class="instruction" id="instruction-text">ضِعوا أصابعكم على الشاشة...</div>
+    </div>
+
+    <div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>
+    <div class="side-menu" id="side-menu">
+        <div class="menu-header">الإعدادات ⚙️</div>
+
+        <div class="menu-item" onclick="openChallengesModal()">
+            📝 إدارة التحديات
+            <span class="update-text">أضف أو احذف أسئلة وتحديات</span>
+        </div>
+
+        <div class="menu-item" onclick="checkForUpdates()">
+            🔄 التحقق من التحديثات
+            <span class="update-text" id="update-status">النسخة الحالية: 1.0</span>
+        </div>
+    </div>
+
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--success);">تم الاختيار! 🎯</h2>
+            <div id="challenge-text" class="challenge-result"></div>
+            <button class="btn" onclick="closeResultModal()" style="width: 100%;">موافق</button>
+        </div>
+    </div>
+
+    <div id="challenges-modal" class="modal">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <h2 style="margin-bottom: 15px;">قائمة التحديات</h2>
+            <input type="text" id="new-challenge-input" placeholder="اكتب تحدياً جديداً هنا...">
+            <button class="btn" onclick="addChallenge()" style="padding: 10px; width: 100%; margin-bottom: 15px;">+ إضافة</button>
+            <div id="challenges-list" style="text-align: right; margin-bottom: 20px;"></div>
+            <button class="btn" onclick="closeChallengesModal()" style="background: #ef4444; width: 100%;">إغلاق</button>
+        </div>
+    </div>
+
+    <script>
+        const APP_VERSION = "1.0";
+        const GITHUB_USERNAME = "amr-sultan";
+        const GITHUB_REPO = "fingers-challenge";
+        const PAGES_URL = `https://${GITHUB_USERNAME}.github.io/${GITHUB_REPO}/`;
+
+        const colors = ['#f43f5e', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#3b82f6'];
+
+        let challenges = JSON.parse(localStorage.getItem('app_challenges')) || [
+            "تحدث بلهجة مختلفة لمدة دقيقة",
+            "أخبرنا بموقف محرج حدث لك",
+            "افعل 5 تمارين ضغط الآن",
+            "اتصل بآخر رقم وقم بغناء مقطع له"
+        ];
+
+        let activeTouches = [];
+        let isSelecting = false;
+        let countdownTimer = null;
+        let previousTouchCount = 0;
+
+        let audioContext = null;
+
+        const homeScreen = document.getElementById('home-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const instructionText = document.getElementById('instruction-text');
+
+        function initAudio() {
+            if (!audioContext) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    audioContext = new AudioCtx();
+                }
+            }
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        function playTone(frequency, duration = 0.18, type = 'sine', volume = 0.04) {
+            if (!audioContext) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+            gainNode.gain.value = volume;
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playStartSound() {
+            playTone(440, 0.12, 'triangle', 0.04);
+            setTimeout(() => playTone(660, 0.16, 'triangle', 0.05), 90);
+        }
+
+        function playSelectSound() {
+            playTone(220, 0.12, 'square', 0.035);
+            setTimeout(() => playTone(320, 0.14, 'square', 0.04), 80);
+        }
+
+        function playWinSound() {
+            playTone(523.25, 0.18, 'triangle', 0.05);
+            setTimeout(() => playTone(659.25, 0.18, 'triangle', 0.05), 120);
+            setTimeout(() => playTone(783.99, 0.22, 'triangle', 0.05), 240);
+        }
+
+        function createBurst(x, y, color) {
+            const burstSize = 18;
+            for (let i = 0; i < burstSize; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.background = color;
+                const angle = (Math.PI * 2 * i) / burstSize;
+                const distance = 30 + Math.random() * 90;
+                const dx = Math.cos(angle) * distance;
+                const dy = Math.sin(angle) * distance;
+                particle.style.setProperty('--dx', `${dx}px`);
+                particle.style.setProperty('--dy', `${dy}px`);
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 850);
+            }
+        }
+
+        function startGame() {
+            initAudio();
+            homeScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            instructionText.innerText = "ضِعوا أصابعكم على الشاشة...";
+            playStartSound();
+        }
+
+        function backToHome() {
+            gameScreen.classList.add('hidden');
+            homeScreen.classList.remove('hidden');
+            resetGame();
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('menu-overlay');
+            menu.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        async function checkForUpdates() {
+            const statusText = document.getElementById('update-status');
+            statusText.innerText = "جاري التحقق...";
+            try {
+                const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/version.json?t=${Date.now()}`);
+                if (!response.ok) throw new Error("Network response was not ok");
+
+                const data = await response.json();
+
+                if (data.version !== APP_VERSION) {
+                    alert(`يوجد تحديث جديد (النسخة ${data.version})! سيتم تحديث التطبيق الآن.`);
+                    if (data.update_url) {
+                        window.location.href = data.update_url;
+                    } else {
+                        window.location.href = PAGES_URL;
+                    }
+                } else {
+                    alert("التطبيق محدّث لآخر نسخة! لا داعي للتحديث.");
+                    statusText.innerText = `النسخة الحالية: ${APP_VERSION} (محدّث)`;
+                }
+            } catch (error) {
+                alert("النسخة محدثة أو لا يوجد اتصال بالإنترنت حالياً.");
+                statusText.innerText = `النسخة الحالية: ${APP_VERSION}`;
+            }
+        }
+
+        gameScreen.addEventListener('touchstart', handleTouches, { passive: false });
+        gameScreen.addEventListener('touchmove', handleTouches, { passive: false });
+        gameScreen.addEventListener('touchend', handleTouches, { passive: false });
+        gameScreen.addEventListener('touchcancel', handleTouches, { passive: false });
+
+        function handleTouches(e) {
+            initAudio();
+            if (e.target.tagName === 'BUTTON') return;
+            e.preventDefault();
+            if (isSelecting) return;
+
+            const currentTouchCount = e.touches.length;
+
+            if (currentTouchCount !== previousTouchCount) {
+                clearTimeout(countdownTimer);
+                countdownTimer = null;
+            }
+
+            activeTouches = Array.from(e.touches).map(t => ({ id: t.identifier, x: t.clientX, y: t.clientY }));
+            drawCircles();
+
+            if (currentTouchCount >= 2) {
+                if (!countdownTimer) {
+                    instructionText.innerText = "لا تتحرك... جاري الاختيار! (3 ثوانٍ)";
+                    playSelectSound();
+                    countdownTimer = setTimeout(selectWinner, 3000);
+                }
+            } else if (currentTouchCount === 1) {
+                instructionText.innerText = "نحتاج لإصبع آخر على الأقل للتحدي...";
+            } else {
+                instructionText.innerText = "ضِعوا أصابعكم على الشاشة...";
+            }
+
+            previousTouchCount = currentTouchCount;
+        }
+
+        function drawCircles() {
+            document.querySelectorAll('.finger-circle').forEach(el => el.remove());
+
+            activeTouches.forEach((touch, index) => {
+                const circle = document.createElement('div');
+                circle.className = 'finger-circle';
+                circle.id = `circle-${touch.id}`;
+                circle.style.left = `${touch.x}px`;
+                circle.style.top = `${touch.y}px`;
+                const color = colors[index % colors.length];
+                circle.style.backgroundColor = color;
+                circle.style.borderColor = color;
+                gameScreen.appendChild(circle);
+            });
+        }
+
+        function selectWinner() {
+            if (activeTouches.length < 2) return;
+
+            isSelecting = true;
+            instructionText.innerText = "تم الاختيار!";
+
+            const array = new Uint32Array(1);
+            window.crypto.getRandomValues(array);
+            const winnerIndex = array[0] % activeTouches.length;
+            const winnerId = activeTouches[winnerIndex].id;
+
+            document.querySelectorAll('.finger-circle').forEach(circle => {
+                circle.style.animation = 'none';
+                if (circle.id === `circle-${winnerId}`) {
+                    circle.classList.add('winner');
+                    const rect = circle.getBoundingClientRect();
+                    createBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, '#10b981');
+                } else {
+                    circle.style.opacity = '0.1';
+                }
+            });
+
+            playWinSound();
+            setTimeout(showChallengeResult, 1200);
+        }
+
+        function showChallengeResult() {
+            const resultText = document.getElementById('challenge-text');
+            if (challenges.length === 0) {
+                resultText.innerText = "لا توجد تحديات! الرجاء إضافتها من الإعدادات.";
+            } else {
+                const randomIndex = Math.floor(Math.random() * challenges.length);
+                resultText.innerText = challenges[randomIndex];
+            }
+            document.getElementById('result-modal').classList.add('show');
+            createBurst(window.innerWidth / 2, window.innerHeight / 2, '#3b82f6');
+        }
+
+        function closeResultModal() {
+            document.getElementById('result-modal').classList.remove('show');
+            resetGame();
+        }
+
+        function resetGame() {
+            isSelecting = false;
+            previousTouchCount = 0;
+            activeTouches = [];
+            clearTimeout(countdownTimer);
+            countdownTimer = null;
+            document.querySelectorAll('.finger-circle').forEach(el => el.remove());
+            if (!gameScreen.classList.contains('hidden')) {
+                instructionText.innerText = "ضِعوا أصابعكم على الشاشة...";
+            }
+        }
+
+        function openChallengesModal() {
+            toggleMenu();
+            renderChallenges();
+            document.getElementById('challenges-modal').classList.add('show');
+        }
+
+        function closeChallengesModal() {
+            document.getElementById('challenges-modal').classList.remove('show');
+        }
+
+        function renderChallenges() {
+            const list = document.getElementById('challenges-list');
+            list.innerHTML = '';
+            challenges.forEach((ch, index) => {
+                list.innerHTML += `
+                    <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.9rem;">${ch}</span>
+                        <button onclick="deleteChallenge(${index})" style="background:#ef4444; border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer;">حذف</button>
+                    </div>
+                `;
+            });
+        }
+
+        function addChallenge() {
+            const input = document.getElementById('new-challenge-input');
+            if (input.value.trim() !== '') {
+                challenges.push(input.value.trim());
+                localStorage.setItem('app_challenges', JSON.stringify(challenges));
+                input.value = '';
+                renderChallenges();
+            }
+        }
+
+        function deleteChallenge(index) {
+            challenges.splice(index, 1);
+            localStorage.setItem('app_challenges', JSON.stringify(challenges));
+            renderChallenges();
+        }
+    </script>
+</body>
+</html>
